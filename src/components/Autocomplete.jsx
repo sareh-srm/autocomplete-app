@@ -1,9 +1,35 @@
 import React, { useEffect, useState } from "react";
 
+const SearchableSelect = ({ options, onSelect }) => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredOptions, setFilteredOptions] = useState([...options]);
+
+  useEffect(() => {
+    const filtered = options.filter((option) =>
+      option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredOptions(filtered);
+  }, [options, searchQuery]);
+
+  const handleSelect = (e) => {
+    onSelect(e.target.value);
+    setSearchQuery("");
+  };
+
+  return (
+    <select value={searchQuery} onChange={handleSelect}>
+      {filteredOptions.map((option, index) => (
+        <option key={index} value={option.value}>
+          {option.label}
+        </option>
+      ))}
+    </select>
+  );
+};
+
 const Autocomplete = () => {
   const [options, setOptions] = useState([]);
-
-  //function to fetch data from api
+  const [selectedOption, setSelectedOption] = useState(null);
 
   const fetchOptions = async () => {
     try {
@@ -11,8 +37,6 @@ const Autocomplete = () => {
         "https://jsonplaceholder.typicode.com/posts"
       );
       const data = await response.json();
-      console.log(data);
-      // setOptions(data?.options ?? []); //assuming the api returns an array of options
       setOptions(data.map((post) => ({ value: post.id, label: post.title })));
     } catch (error) {
       console.error("Error fetching data", error);
@@ -25,15 +49,15 @@ const Autocomplete = () => {
     fetchOptions();
   }, []);
 
+  const handleSelect = (value) => {
+    const selected = options.find((option) => option.value === value);
+    setSelectedOption(selected);
+  };
+
   return (
     <>
-      <select name="" id="">
-        {options.map((option, index) => (
-          <option key={index} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+      <SearchableSelect options={options} onSelect={handleSelect} />
+      {selectedOption && <p>You selected: {selectedOption.label}</p>}
     </>
   );
 };
